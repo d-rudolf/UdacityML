@@ -14,7 +14,7 @@ from helper import _create_new_features, _remove_outlier, _scale_data, _get_clas
 
 sys.path.append("../tools/")
 
-from feature_format import featureFormat, targetFeatureSplit
+from tools.feature_format import featureFormat, targetFeatureSplit
 from tester import dump_classifier_and_data, test_classifier
 """
 Task 1: Select what features you'll use.

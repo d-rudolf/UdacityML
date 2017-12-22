@@ -15,8 +15,8 @@ import sys
 import numpy as np
 from sklearn import preprocessing
 from sklearn.model_selection import StratifiedShuffleSplit
-sys.path.append("../tools/")
-from feature_format import featureFormat, targetFeatureSplit
+#sys.path.append("../tools/")
+from tools.feature_format import featureFormat, targetFeatureSplit
 
 PERF_FORMAT_STRING = "\
 \tAccuracy: {:>0.{display_precision}f}\tPrecision: {:>0.{display_precision}f}\t\
