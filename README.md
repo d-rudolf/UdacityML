@@ -1,6 +1,6 @@
 Clone the project from github:
 ```
-$ git clone git@github.com:d-rudolf/UdacityML.git && git checkout project_submission 
+$ git clone git@github.com:d-rudolf/UdacityML.git &&  cd UdacityML
 ```
 The branch for project submission is project_submission, not master The fastest way to run the code is to use pipenv. Install pipenv:
 ```
