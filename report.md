@@ -38,8 +38,12 @@ To visualize the data I wrote a small web app, which you can run from the flask_
 ```
 mypath/ud120-projects/final_project/flask_app$ python manage.py runserver
 ```  
+The number of data points (persons) before formatting is 146 and after having removed all persons where all values are zero
+there are 136 persons left.
+The number of POI/non POI is 18/118.  
 If you define outliers as data points, which are several standard deviations away from the mean of a distribution, 
-I found three outliers:  'TOTAL', 'LAY KENNETH L', 'SKILLING JEFFREY K'. I did not consider them in my analysis. 
+I found three outliers:  'TOTAL', 'LAY KENNETH L', 'SKILLING JEFFREY K'. However, I kept 'LAY KENNETH L' and 
+'SKILLING JEFFREY K' (the two 'bad guys') in the dataset because I was asked to do so by a reviewer.  
 
 
 #### 2. Features (create new features, intelligently select features, properly scale features)

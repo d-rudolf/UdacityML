@@ -19,6 +19,15 @@ sys.path.append("../tools/")
 from tester import test_classifier
 
 
+def _get_num_of_poi(data):
+    """
+    :param data: list of dicts with person data
+    :return: number of poi
+    """
+    is_poi = [person.get('poi') for person in data]
+    num_poi = is_poi.count(True)
+    return num_poi
+
 def _get_features():
     features_list = ['poi',
                      'bonus',
@@ -80,7 +89,7 @@ def _create_new_features(features):
     return new_features
 
 def _remove_outlier(data_dict):
-    outlier_list = ['TOTAL', 'LAY KENNETH L', 'SKILLING JEFFREY K']
+    outlier_list = ['TOTAL']
     for name in list(data_dict.keys()):
         if name in outlier_list:
             data_dict.pop(name)

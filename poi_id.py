@@ -8,7 +8,7 @@ from sklearn import svm, linear_model, preprocessing
 from sklearn.decomposition import PCA
 from sklearn.model_selection import GridSearchCV, StratifiedShuffleSplit
 from sklearn.pipeline import Pipeline
-from helper import _create_new_features, _remove_outlier, _scale_data, _get_classifier, _cross_validate, _get_train_test_data, \
+from helper import _get_num_of_poi, _create_new_features, _remove_outlier, _scale_data, _get_classifier, _cross_validate, _get_train_test_data, \
     _select_features, _get_parameters, _evaluate_grid_search, _get_features, _get_new_features, _get_new_classifier, \
     _test_pipeline, _get_best_parameters, _get_pipeline_and_parameters
 
@@ -24,7 +24,9 @@ The first feature must be "poi".
 features_list = _get_features()
 with open("final_project_dataset.pkl", "br") as data_file:
     data_dict = pickle.load(data_file)
-print('The number of person is {0}.'.format(len(data_dict.keys())))
+print('number of person before formatting: {0}'.format(len(data_dict.keys())))
+num_poi = _get_num_of_poi(data_dict.values())
+print('number of POI before formatting: {0}'.format(num_poi))
 """
 ### Task 2: Remove outliers
 """
@@ -33,11 +35,18 @@ data_dict = _remove_outlier(data_dict)
 ### Task 3: Create new feature(s)
 ### Extract features and labels from dataset for local testing
 """
-data = featureFormat(data_dict, features_list, sort_keys = True)
+data = featureFormat(data_dict, features_list,
+                    remove_NaN=True,
+                    remove_all_zeroes=True,
+                    remove_any_zeroes=False,
+                    sort_keys = True)
 """
 labels:  1 for poi, 0 for non-poi, features: np.array([])
 """
 labels, features = targetFeatureSplit(data)
+print('number of person after formatting: {0}'.format(len(features)))
+print('number of POI after formatting: {0}'.format(labels.count(1)))
+print('number of features: {0}'.format(len(features[0])))
 features = _create_new_features(features)
 features = preprocessing.scale(features)
 feature_train, feature_test, label_train, label_test = _get_train_test_data(features, labels)
