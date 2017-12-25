@@ -78,7 +78,7 @@ Pipeline(memory=None,
   
 ##### maximum recall: 0.454
 
-#####clf for maximum recall: 
+##### clf for maximum recall: 
 
 Pipeline(memory=None,
      steps=[('dim_reduct', PCA(copy=True, iterated_power='auto', n_components=3, random_state=None,
@@ -87,9 +87,9 @@ Pipeline(memory=None,
   max_iter=-1, probability=False, random_state=None, shrinking=True,
   tol=0.001, verbose=False))])
 
-#####maximum accuracy: 0.890
+##### maximum accuracy: 0.890
 
-#####clf for maximum accuracy: 
+##### clf for maximum accuracy: 
 
 Pipeline(memory=None,
      steps=[('dim_reduct', PCA(copy=True, iterated_power='auto', n_components=11, random_state=None,
