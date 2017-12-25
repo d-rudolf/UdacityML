@@ -65,9 +65,9 @@ Here are the results without new features, i.e. with these features:
 
 ['from_poi_to_this_person','to_messages','from_this_person_to_poi','from_messages','salary','bonus','deferral_payments','deferred_income','director_fees','expenses','loan_advances','long_term_incentive','total_payments'] 
 
-#####maximum precision: 0.650
+##### maximum precision: 0.650
 
-#####clf for maximum precision: 
+##### clf for maximum precision: 
 
 Pipeline(memory=None,
      steps=[('dim_reduct', PCA(copy=True, iterated_power='auto', n_components=11, random_state=None,
