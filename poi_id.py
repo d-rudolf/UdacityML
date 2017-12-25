@@ -47,7 +47,9 @@ labels, features = targetFeatureSplit(data)
 print('number of person after formatting: {0}'.format(len(features)))
 print('number of POI after formatting: {0}'.format(labels.count(1)))
 print('number of features: {0}'.format(len(features[0])))
-features = _create_new_features(features)
+with_new_features = True
+if with_new_features:
+    features = _create_new_features(features)
 features = preprocessing.scale(features)
 feature_train, feature_test, label_train, label_test = _get_train_test_data(features, labels)
 """
@@ -95,7 +97,7 @@ http://scikit-learn.org/stable/modules/generated/sklearn.cross_validation.Strati
 
 """
 test_classifier(mypipeline_with_params, data_dict, features_list, folds=10)
-_test_pipeline(mypipeline, parameters, feature_train, label_train, data_dict, features_list, folds=10)
+#_test_pipeline(mypipeline, parameters, feature_train, label_train, data_dict, features_list, folds=10)
 
 """
 Task 6: Dump your classifier, dataset, and features_list so anyone can

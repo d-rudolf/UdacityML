@@ -124,8 +124,9 @@ Nice work in removing the `TOTAL` outlier. But outliers like `LAY KENNETH L` and
 
 #### Answer
 
-Yes, I changed that and kept 'LAY KENNETH L' and 'SKILLING JEFFREY K' in the dataset.
-
+I tried to build a pipeline keeping 'LAY KENNETH L' and 'SKILLING JEFFREY K' in the dataset but it performs worse than without them.
+I can only fulfil the requirements recall and precision < 0.3 if I remove them.    
+Also, removing 2 from 18 POI should not be a problem.
 ### Optimize Feature Selection/Engineering
 
 At least one new feature is implemented. Justification for that feature is provided in the written response. The effect of that feature on final algorithm performance is tested or its strength is compared to other features in feature selection. The student is not required to include their new feature in their final feature set.
@@ -134,11 +135,174 @@ At least one new feature is implemented. Justification for that feature is provi
 
 In addition to creating the new features, please provide a response to explain the effect that the new features have on the final algorithm. This can be done by training a simple classifier with and without the new features. The feature importance scores of all the features (new and existing) could also be provided to show the strength of the new features.
 
+
+#### Answer
+I tested my pipeline with and without the new features. 
+Here are the results without new features, i.e. with theses features:
+['from_poi_to_this_person','to_messages','from_this_person_to_poi','from_messages','salary','bonus','deferral_payments','deferred_income','director_fees','expenses','loan_advances','long_term_incentive','total_payments'] 
+maximum precision: 0.650
+
+clf for maximum precision: 
+
+Pipeline(memory=None,
+     steps=[('dim_reduct', PCA(copy=True, iterated_power='auto', n_components=11, random_state=None,
+  svd_solver='auto', tol=0.0, whiten=False)), ('clf', SVC(C=20.0, cache_size=200, class_weight=None, coef0=0.0,
+  decision_function_shape='ovr', degree=3, gamma=1.0, kernel='rbf',
+  max_iter=-1, probability=False, random_state=None, shrinking=True,
+  tol=0.001, verbose=False))])
+  
+maximum recall: 0.454
+
+clf for maximum recall: 
+
+Pipeline(memory=None,
+     steps=[('dim_reduct', PCA(copy=True, iterated_power='auto', n_components=3, random_state=None,
+  svd_solver='auto', tol=0.0, whiten=False)), ('clf', SVC(C=80.0, cache_size=200, class_weight=None, coef0=0.0,
+  decision_function_shape='ovr', degree=3, gamma=0.5, kernel='rbf',
+  max_iter=-1, probability=False, random_state=None, shrinking=True,
+  tol=0.001, verbose=False))])
+
+maximum accuracy: 0.890
+
+clf for maximum accuracy: 
+
+Pipeline(memory=None,
+     steps=[('dim_reduct', PCA(copy=True, iterated_power='auto', n_components=11, random_state=None,
+  svd_solver='auto', tol=0.0, whiten=False)), ('clf', SVC(C=20.0, cache_size=200, class_weight=None, coef0=0.0,
+  decision_function_shape='ovr', degree=3, gamma=1.0, kernel='rbf',
+  max_iter=-1, probability=False, random_state=None, shrinking=True,
+  tol=0.001, verbose=False))])
+
+The results with new features, i.e. ['from_poi_to_this_person_ratio', 'from_this_person_to_poi_ratio', 'salary','bonus','deferral_payments','deferred_income','director_fees','expenses','loan_advances','long_term_incentive','total_payments'] 
+are the same. I get the same values for maximum recall, precision and accuracy for the same pipeline parameters.
+From that I conclude that my new features are as good as the given ones and keep using them. 
+
+
 Univariate or recursive feature selection is deployed, or features are selected by hand (different combinations of features are attempted, and the performance is documented for each one). Features that are selected are reported and the number of features selected is justified. For an algorithm that supports getting the feature importances (e.g. decision tree) or feature scores (e.g. SelectKBest), those are documented as well.
 
 #### Required
 
 Since the features were chosen manually, provide the performance scores (precision and recall) for the combinations of features that were tested. By doing this, we can select the combination that yielded the best results.
+
+### Answer
+I manually tried a different subset of features and obtained these results.
+
+features: 
+
+['from_poi_to_this_person_ratio','from_this_person_to_poi_ratio','salary','bonus','deferral_payments','deferred_income','director_fees','expenses','loan_advances','long_term_incentive','total_payments','exercised_stock_options','restricted_stock','restricted_stock_deferred','total_stock_value']
+
+maximum precision: 0.448
+
+clf for maximum precision: 
+
+Pipeline(memory=None,
+     steps=[('dim_reduct', PCA(copy=True, iterated_power='auto', n_components=9, random_state=None,
+  svd_solver='auto', tol=0.0, whiten=False)), ('clf', SVC(C=80.0, cache_size=200, class_weight=None, coef0=0.0,
+  decision_function_shape='ovr', degree=3, gamma=0.5, kernel='rbf',
+  max_iter=-1, probability=False, random_state=None, shrinking=True,
+  tol=0.001, verbose=False))])
+
+maximum recall: 0.187
+
+clf for maximum recall: 
+
+Pipeline(memory=None,
+     steps=[('dim_reduct', PCA(copy=True, iterated_power='auto', n_components=7, random_state=None,
+  svd_solver='auto', tol=0.0, whiten=False)), ('clf', SVC(C=85.0, cache_size=200, class_weight=None, coef0=0.0,
+  decision_function_shape='ovr', degree=3, gamma=0.1, kernel='rbf',
+  max_iter=-1, probability=False, random_state=None, shrinking=True,
+  tol=0.001, verbose=False))])
+
+maximum accuracy: 0.886
+
+clf for maximum accuracy: 
+
+Pipeline(memory=None,
+     steps=[('dim_reduct', PCA(copy=True, iterated_power='auto', n_components=9, random_state=None,
+  svd_solver='auto', tol=0.0, whiten=False)), ('clf', SVC(C=80.0, cache_size=200, class_weight=None, coef0=0.0,
+  decision_function_shape='ovr', degree=3, gamma=0.5, kernel='rbf',
+  max_iter=-1, probability=False, random_state=None, shrinking=True,
+  tol=0.001, verbose=False))])
+
+features:
+
+['from_poi_to_this_person_ratio','from_this_person_to_poi_ratio','salary','bonus','deferral_payments','deferred_income','director_fees','expenses']
+
+maximum precision: 0.713
+
+clf for maximum precision: 
+
+Pipeline(memory=None,
+     steps=[('dim_reduct', PCA(copy=True, iterated_power='auto', n_components=7, random_state=None,
+  svd_solver='auto', tol=0.0, whiten=False)), ('clf', SVC(C=10.0, cache_size=200, class_weight=None, coef0=0.0,
+  decision_function_shape='ovr', degree=3, gamma=0.1, kernel='rbf',
+  max_iter=-1, probability=False, random_state=None, shrinking=True,
+  tol=0.001, verbose=False))])
+
+maximum recall: 
+
+0.461
+clf for maximum recall: 
+
+Pipeline(memory=None,
+     steps=[('dim_reduct', PCA(copy=True, iterated_power='auto', n_components=5, random_state=None,
+  svd_solver='auto', tol=0.0, whiten=False)), ('clf', SVC(C=75.0, cache_size=200, class_weight=None, coef0=0.0,
+  decision_function_shape='ovr', degree=3, gamma=1.0, kernel='rbf',
+  max_iter=-1, probability=False, random_state=None, shrinking=True,
+  tol=0.001, verbose=False))])
+
+maximum accuracy: 0.886
+
+clf for maximum accuracy: 
+
+Pipeline(memory=None,
+     steps=[('dim_reduct', PCA(copy=True, iterated_power='auto', n_components=5, random_state=None,
+  svd_solver='auto', tol=0.0, whiten=False)), ('clf', SVC(C=10.0, cache_size=200, class_weight=None, coef0=0.0,
+  decision_function_shape='ovr', degree=3, gamma=0.5, kernel='rbf',
+  max_iter=-1, probability=False, random_state=None, shrinking=True,
+  tol=0.001, verbose=False))])
+
+features:
+
+['from_poi_to_this_person_ratio', 'from_this_person_to_poi_ratio', 'from_messages', 'salary', 'bonus', 'deferral_payments']
+
+maximum precision: 0.395
+
+clf for maximum precision: 
+
+Pipeline(memory=None,
+     steps=[('dim_reduct', PCA(copy=True, iterated_power='auto', n_components=3, random_state=None,
+  svd_solver='auto', tol=0.0, whiten=False)), ('clf', SVC(C=10.0, cache_size=200, class_weight=None, coef0=0.0,
+  decision_function_shape='ovr', degree=3, gamma=1.0, kernel='rbf',
+  max_iter=-1, probability=False, random_state=None, shrinking=True,
+  tol=0.001, verbose=False))])
+
+maximum recall: 0.248
+
+clf for maximum recall: 
+
+Pipeline(memory=None,
+     steps=[('dim_reduct', PCA(copy=True, iterated_power='auto', n_components=3, random_state=None,
+  svd_solver='auto', tol=0.0, whiten=False)), ('clf', SVC(C=20.0, cache_size=200, class_weight=None, coef0=0.0,
+  decision_function_shape='ovr', degree=3, gamma=0.5, kernel='rbf',
+  max_iter=-1, probability=False, random_state=None, shrinking=True,
+  tol=0.001, verbose=False))])
+
+maximum accuracy: 0.852
+
+clf for maximum accuracy:
+
+Pipeline(memory=None,
+     steps=[('dim_reduct', PCA(copy=True, iterated_power='auto', n_components=3, random_state=None,
+  svd_solver='auto', tol=0.0, whiten=False)), ('clf', SVC(C=10.0, cache_size=200, class_weight=None, coef0=0.0,
+  decision_function_shape='ovr', degree=3, gamma=1.0, kernel='rbf',
+  max_iter=-1, probability=False, random_state=None, shrinking=True,
+  tol=0.001, verbose=False))])
+
+The best result I obtained for these features:
+['from_poi_to_this_person_ratio','from_this_person_to_poi_ratio','salary','bonus','deferral_payments','deferred_income','director_fees','expenses']
+
+
 
 If algorithm calls for scaled features, feature scaling is deployed.
 
@@ -170,6 +334,10 @@ At least two appropriate metrics are used to evaluate algorithm performance (e.g
 
 When defining precision and recall, try to use more layman's terms instead of terms like 'True Positives' or 'False Positives' so that anyone can understand these metrics.
 
+#### Answer
+
+Thank you, I changed my explanation accordingly.
+
 Response addresses what validation is and why it is important.
 
 #### Required
@@ -177,6 +345,11 @@ Response addresses what validation is and why it is important.
 When defining validation, explain why the data has to be partitioned. What would happen if the data wasn't partitioned and the model was trained using the entire dataset? And what is the main purpose of using the test set?
 
 Here's a link that may help with defining validation: [https://link.springer.com/referenceworkentry/10.1007%2F978-1-4419-9863-7_233](https://link.springer.com/referenceworkentry/10.1007%2F978-1-4419-9863-7_233)
+
+#### Answer
+
+I changed my explanation accordingly.
+
 
 Performance of the final algorithm selected is assessed by splitting the data into training and testing sets or through the use of cross validation, noting the specific type of validation performed.
 
@@ -205,3 +378,6 @@ The final algorithm couldn't be evaluated because the `poi_id.py` file should be
         raise ValueError, "unsupported pickle protocol: %d" % proto
     ValueError: unsupported pickle protocol: 3
     
+#### Answer:
+
+Please use Python 3.5 to read my pickle files.

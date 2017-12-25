@@ -63,9 +63,14 @@ def _get_features():
                   'deferred_income',
                   'director_fees',
                   'expenses',
-                  'loan_advances',
-                  'long_term_incentive',
-                  'total_payments']
+                  #'loan_advances',
+                  #'long_term_incentive',
+                  #'total_payments',
+                  #'exercised_stock_options',
+                  #'restricted_stock',
+                  #'restricted_stock_deferred',
+                  #'total_stock_value'
+                  ]
     return myfeatures
 
 def _create_new_features(features):
@@ -89,7 +94,7 @@ def _create_new_features(features):
     return new_features
 
 def _remove_outlier(data_dict):
-    outlier_list = ['TOTAL']
+    outlier_list = ['TOTAL', 'LAY KENNETH L', 'SKILLING JEFFREY K']
     for name in list(data_dict.keys()):
         if name in outlier_list:
             data_dict.pop(name)
@@ -161,12 +166,12 @@ def _get_mean_and_std(array):
 def _get_parameters(feat_select, clf):
     parameters = {}
     if feat_select == 'pca':
-        parameters['dim_reduct__n_components'] = (3, 5, 7, 9, 11)
+        parameters['dim_reduct__n_components'] = (3, 5, 7)
     if feat_select == 'k_best':
-        parameters['feat_select__k'] = (3, 5, 7, 9, 11)
+        parameters['feat_select__k'] = (3, 6, 7)
     if clf == 'svm':
-        parameters['clf__C'] = (5e1, 7e1, 8e1)
-        parameters['clf__gamma'] = (1e-1, 5e-1, 1e0)
+        parameters['clf__C'] = (1e1, 2e1, 5e1, 6e1, 7.5e1, 8e1, 8.5e1)
+        parameters['clf__gamma'] =  (1.0e-1, 5.0e-1, 1e0)
     if clf == 'ada_boost':
         parameters['clf__n_estimators'] = (100, 300, 500)
         parameters['clf__learning_rate'] = (0.5, 1.0, 1.5)
@@ -175,22 +180,22 @@ def _get_parameters(feat_select, clf):
 def _get_best_parameters(feat_select, clf):
     best_parameters = {}
     if feat_select == 'pca' and clf == 'svm':
-        best_parameters['dim_reduct__n_components'] = 3
-        best_parameters['clf__C'] = 80
-        best_parameters['clf__gamma'] = 0.5
+        best_parameters['dim_reduct__n_components'] = 5
+        best_parameters['clf__C'] = 75.0
+        best_parameters['clf__gamma'] = 1.0
         best_parameters['clf__kernel'] = 'rbf'
     if feat_select == 'k_best' and clf == 'svm':
-        best_parameters['feat_select__k'] = 3
-        best_parameters['clf__C'] = 50
+        best_parameters['feat_select__k'] = 6
+        best_parameters['clf__C'] = 75.0
         best_parameters['clf__gamma'] = 0.5
         best_parameters['clf__kernel'] = 'rbf'
     if feat_select == 'pca' and clf == 'ada_boost':
-        best_parameters['dim_reduct__n_components'] = 11
+        best_parameters['dim_reduct__n_components'] = 7
         best_parameters['clf__n_estimators'] = 100
         best_parameters['clf__learning_rate'] = 1.0
     if feat_select == 'k_best' and clf == 'ada_boost':
         best_parameters['feat_select__k'] = 7
-        best_parameters['clf__n_estimators'] = 100
+        best_parameters['clf__n_estimators'] = 500
         best_parameters['clf__learning_rate'] = 1.5
     return best_parameters
 
@@ -288,6 +293,7 @@ def _test_pipeline(pipeline, params, feature_train, label_train, data_dict, feat
         pipeline.set_params(**kwargs).fit(feature_train, label_train)
         score_stats = test_classifier(pipeline, data_dict, features_list, folds)
         score_stats_list.append(copy.deepcopy(score_stats))
+        #print('score_stats_list: {0}'.format(score_stats_list))
     _find_best_params(score_stats_list)
 
 def _find_best_params(score_stats_list):
@@ -312,9 +318,13 @@ def _find_best_params(score_stats_list):
         except TypeError as err:
             print(err)
     for score_list, score in zip([precision_list, recall_list, accuracy_list], ['precision', 'recall', 'accuracy']):
-        score_array = np.array(score_list)
-        max_score = score_array.max()
-        index_max_score = score_array.argmax()
-        max_clf = score_stats_list[index_max_score]['clf']
-        print('maximum {0}: {1:0.3f}'.format(score, max_score))
-        print('clf for maximum {0}: {1}'.format(score, max_clf))
+        try:
+            score_array = np.array(score_list)
+            max_score = score_array.max()
+            index_max_score = score_array.argmax()
+            max_clf = score_stats_list[index_max_score]['clf']
+            #print('all data for maximum {0}: {1}'.format(score, score_stats_list[index_max_score]))
+            print('maximum {0}: {1:0.3f}'.format(score, max_score))
+            print('clf for maximum {0}: {1}'.format(score, max_clf))
+        except TypeError as err:
+            print(err)

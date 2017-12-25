@@ -80,6 +80,7 @@ def test_classifier(clf, dataset, feature_list, folds = 50):
             mean, std = _get_mean_and_std(v)
             print('{0}: {1:.3f} +/- {2:.3f}'.format(k, mean, std))
             score_stats[k] = (mean, std)
+        print('clf: {0}'.format(clf))
         score_stats['clf'] = clf
         total_predictions = true_negatives + false_negatives + false_positives + true_positives
         accuracy = 1.0*(true_positives + true_negatives)/total_predictions
