@@ -18,17 +18,24 @@ from sklearn.model_selection import StratifiedShuffleSplit
 #sys.path.append("../tools/")
 from tools.feature_format import featureFormat, targetFeatureSplit
 
+
 PERF_FORMAT_STRING = "\
 \tAccuracy: {:>0.{display_precision}f}\tPrecision: {:>0.{display_precision}f}\t\
 Recall: {:>0.{display_precision}f} \tF1: {:>0.{display_precision}f}\tF2: {:>0.{display_precision}f}"
 RESULTS_FORMAT_STRING = "\tTotal predictions: {:4d}\tTrue positives: {:4d}\tFalse positives: {:4d}\
 \tFalse negatives: {:4d}\tTrue negatives: {:4d}"
 
-def test_classifier(clf, dataset, feature_list, folds = 50):
-    data = featureFormat(dataset, feature_list, sort_keys = True)
+def test_classifier(clf, dataset, feature_list, with_new_features, folds = 10):
+    data = featureFormat(dataset, feature_list,
+                         remove_NaN=True,
+                         remove_all_zeroes=True,
+                         remove_any_zeroes=False,
+                         sort_keys=True)
     labels, features = targetFeatureSplit(data)
+    if with_new_features:
+        print('with new features')
+        features = _create_new_features(features)
     features = preprocessing.scale(features)
-    print('shape features: {0}'.format(features.shape))
     cv = StratifiedShuffleSplit(n_splits=folds, test_size=0.25, random_state=42)
     true_negatives = 0
     false_negatives = 0
@@ -72,26 +79,32 @@ def test_classifier(clf, dataset, feature_list, folds = 50):
             recall_list.append(recall)
             precision_list.append(precision)
         except TypeError as err:
-            print(err)
+            pass
+            #print(err)
     try:
         myscores = {'accuracy': accuracy_list, 'recall': recall_list, 'precision': precision_list}
         score_stats = {}
-        for k, v in myscores.items():
-            mean, std = _get_mean_and_std(v)
-            print('{0}: {1:.3f} +/- {2:.3f}'.format(k, mean, std))
-            score_stats[k] = (mean, std)
-        print('clf: {0}'.format(clf))
-        score_stats['clf'] = clf
-        total_predictions = true_negatives + false_negatives + false_positives + true_positives
-        accuracy = 1.0*(true_positives + true_negatives)/total_predictions
-        precision = 1.0*true_positives/(true_positives+false_positives)
-        recall = 1.0*true_positives/(true_positives+false_negatives)
-        f1 = 2.0 * true_positives/(2*true_positives + false_positives+false_negatives)
-        f2 = (1+2.0*2.0) * precision*recall/(4*precision + recall)
-        print(PERF_FORMAT_STRING.format(accuracy, precision, recall, f1, f2, display_precision = 5))
-        print(RESULTS_FORMAT_STRING.format(total_predictions, true_positives, false_positives, false_negatives, true_negatives))
-        #print("score_stats: {0}".format(score_stats))
-        return score_stats
+        if recall_list:
+            mean_recall, std_recall = _get_mean_and_std(recall_list)
+        else:
+            mean_recall = 0.0
+        if mean_recall > 0.25:
+            for k, v in myscores.items():
+                mean, std = _get_mean_and_std(v)
+                print('{0}: {1:.3f} +/- {2:.3f}'.format(k, mean, std))
+                score_stats[k] = (mean, std)
+            print('clf: {0}'.format(clf))
+            score_stats['clf'] = clf
+            total_predictions = true_negatives + false_negatives + false_positives + true_positives
+            accuracy = 1.0*(true_positives + true_negatives)/total_predictions
+            precision = 1.0*true_positives/(true_positives+false_positives)
+            recall = 1.0*true_positives/(true_positives+false_negatives)
+            f1 = 2.0 * true_positives/(2*true_positives + false_positives+false_negatives)
+            f2 = (1+2.0*2.0) * precision*recall/(4*precision + recall)
+            print(PERF_FORMAT_STRING.format(accuracy, precision, recall, f1, f2, display_precision = 5))
+            print(RESULTS_FORMAT_STRING.format(total_predictions, true_positives, false_positives, false_negatives, true_negatives))
+            #print("score_stats: {0}".format(score_stats))
+            return score_stats
     except ZeroDivisionError as err:
         print("Got a divide by zero when trying out: {0}".format(clf))
         print("Precision or recall may be undefined due to a lack of true positive predictions.")
@@ -109,12 +122,28 @@ def _calculate_scores(true_positives, true_negatives, false_positives, false_neg
         #print('total recall: {0:0.3f}'.format(recall))
         return accuracy, recall, precision
     except ZeroDivisionError as err:
-        print(err)
+        pass
+        #print(err)
 
 def _get_mean_and_std(list):
     mean = np.array(list).mean()
     std = np.array(list).std()
     return mean, std
+
+def _create_new_features(features):
+    """
+    replaces the first feature by the product of the first two features
+    input: [[feat_1_sample_1, feat_2_sample_1, ..., feat_n_sample_1],
+            [feat_1_sample_2, feat_2_sample_2, ..., feat_n_sample_2], ...]
+
+    :param features:
+    :return: features
+    """
+    num_feat = len(features)
+    for vector, i in zip(features, range(num_feat)):
+        vector[0] = vector[0]*vector[1]
+        features[i] = vector
+    return features
 
 CLF_PICKLE_FILENAME = "my_classifier.pkl"
 DATASET_PICKLE_FILENAME = "my_dataset.pkl"
@@ -143,7 +172,7 @@ def main():
     print('clf: {0}'.format(clf))
     print('feature list: {0}'.format(feature_list))
     ### Run testing script
-    test_classifier(clf, dataset, feature_list)
+    test_classifier(clf, dataset, feature_list, with_new_features=False)
 
 if __name__ == '__main__':
     main()

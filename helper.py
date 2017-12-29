@@ -50,59 +50,55 @@ def _get_features():
                      'to_messages',
                      'total_payments',
                      'total_stock_value']
-
     features_list.remove('email_address')
-    myfeatures = ['poi',
-                  'from_poi_to_this_person',
-                  'to_messages',
-                  'from_this_person_to_poi',
-                  'from_messages',
-                  'salary',
-                  'bonus',
-                  'deferral_payments',
-                  'deferred_income',
-                  'director_fees',
-                  'expenses',
-                  #'loan_advances',
-                  #'long_term_incentive',
-                  #'total_payments',
-                  #'exercised_stock_options',
-                  #'restricted_stock',
-                  #'restricted_stock_deferred',
-                  #'total_stock_value'
-                  ]
-    return myfeatures
+    return features_list
+
+def _order_features_by_score():
+    """
+    sorts the features by scores
+    scores: F value of Analysis of Variance (ANOVA)
+    :return: sorted features and scores
+    """
+    features = _get_features()
+    features.remove('poi')
+    scores = [10.09863783, 0.8831138, 1.19555209, 1.37250905, 34.73257743,
+              3.34279872, 0.05916248, 0.75033658, 2.16001363, 8.17870326,
+              7.54929549, 4.85790445, 15.21368276, 0.07779663, 10.22957239,
+              1.38336448, 0.57357048, 8.82481433, 33.31087215]
+    feature_score_tuple = zip(features, scores)
+    feature_score_tuple_sorted = sorted(feature_score_tuple, key=lambda x: x[1], reverse=True)
+    features_sorted, scores_sorted = zip(*feature_score_tuple_sorted)
+    return ['poi'] + list(features_sorted), list(scores_sorted)
 
 def _create_new_features(features):
     """
-    features[0]: 'from_poi_to_this_person',
-    features[1]: 'to_messages',
-    features[2]: 'from_this_person_to_poi',
-    features[3]: 'from_messages',
+    replaces the first feature by the product of the first two features
+    input: [[feat_1_sample_1, feat_2_sample_1, ..., feat_n_sample_1],
+            [feat_1_sample_2, feat_2_sample_2, ..., feat_n_sample_2], ...]
+
     :param features:
-    :return: new features, i.e. ratio of emails from/to poi and total from/to emails
+    :return: features
     """
-    for vector, i in zip(features, range(len(features))):
-        if vector[0] != 0 and vector[3] != 0:
-            vector[0] = vector[0]/vector[1]
-            vector[1] = vector[2]/vector[3]
-        else:
-            vector[0] = 0
-            vector[1] = 0
+    num_feat = len(features)
+    for vector, i in zip(features, range(num_feat)):
+        vector[0] = vector[0]*vector[1]
         features[i] = vector
-    new_features = np.delete(np.array(features), [2, 3], axis=1)
-    return new_features
+    return features
+
+def _check_k_best_scores(features, labels):
+    k_best = SelectKBest(k='all')
+    k_best.fit(features, labels)
+    print('SelectKBest scores: {0}'.format(k_best.scores_))
 
 def _remove_outlier(data_dict):
-    outlier_list = ['TOTAL', 'LAY KENNETH L', 'SKILLING JEFFREY K']
-    for name in list(data_dict.keys()):
+    outlier_list = ['TOTAL']
+    data_dict_copy = copy.deepcopy(data_dict)
+    for name in list(data_dict_copy.keys()):
         if name in outlier_list:
-            data_dict.pop(name)
-    return data_dict
+            data_dict_copy.pop(name)
+    return data_dict_copy
 
 def _scale_data(features):
-    #features_scaled = np.array([feature/feature.max() for feature in features])
-    #return features_scaled
     myfeatures = []
     for feature in features:
         array_min = feature.min()
@@ -163,15 +159,22 @@ def _get_mean_and_std(array):
     std = array.std()
     return mean, std
 
-def _get_parameters(feat_select, clf):
+def _get_parameters(feat_select, clf, n):
+    """
+    returns tuple of parameters for parameter scan
+    :param feat_select: flag
+    :param clf: classifier
+    :param n: number of features
+    :return:
+    """
     parameters = {}
     if feat_select == 'pca':
-        parameters['dim_reduct__n_components'] = (3, 5, 7)
+        parameters['dim_reduct__n_components'] = tuple(range(1, n+1))
     if feat_select == 'k_best':
-        parameters['feat_select__k'] = (3, 6, 7)
+        parameters['feat_select__k'] = tuple(range(1, n+1))
     if clf == 'svm':
-        parameters['clf__C'] = (1e1, 2e1, 5e1, 6e1, 7.5e1, 8e1, 8.5e1)
-        parameters['clf__gamma'] =  (1.0e-1, 5.0e-1, 1e0)
+        parameters['clf__C'] = (1e-2, 1e-1, 1e0, 1e1, 1e2, 1e3, 1e4, 1e5)
+        parameters['clf__gamma'] = (1e-2, 1e-1, 1e0, 1e1, 1e2, 1e3)
     if clf == 'ada_boost':
         parameters['clf__n_estimators'] = (100, 300, 500)
         parameters['clf__learning_rate'] = (0.5, 1.0, 1.5)
@@ -180,23 +183,25 @@ def _get_parameters(feat_select, clf):
 def _get_best_parameters(feat_select, clf):
     best_parameters = {}
     if feat_select == 'pca' and clf == 'svm':
-        best_parameters['dim_reduct__n_components'] = 5
-        best_parameters['clf__C'] = 75.0
-        best_parameters['clf__gamma'] = 1.0
+        best_parameters['dim_reduct__n_components'] = 4
+        best_parameters['clf__C'] = 1.0e5
+        best_parameters['clf__gamma'] = 1.0e-2
         best_parameters['clf__kernel'] = 'rbf'
     if feat_select == 'k_best' and clf == 'svm':
-        best_parameters['feat_select__k'] = 6
+        best_parameters['feat_select__k'] = 1#6
         best_parameters['clf__C'] = 75.0
         best_parameters['clf__gamma'] = 0.5
         best_parameters['clf__kernel'] = 'rbf'
     if feat_select == 'pca' and clf == 'ada_boost':
-        best_parameters['dim_reduct__n_components'] = 7
+        best_parameters['dim_reduct__n_components'] = 3
         best_parameters['clf__n_estimators'] = 100
         best_parameters['clf__learning_rate'] = 1.0
     if feat_select == 'k_best' and clf == 'ada_boost':
-        best_parameters['feat_select__k'] = 7
+        best_parameters['feat_select__k'] = 1#7
         best_parameters['clf__n_estimators'] = 500
         best_parameters['clf__learning_rate'] = 1.5
+    if feat_select == 'pca' and clf == 'nb':
+        best_parameters['dim_reduct__n_components'] = 4
     return best_parameters
 
 def _get_new_features(pipeline):
@@ -245,34 +250,40 @@ def _evaluate_grid_search(grid_search, mypipeline, parameters, feature, label, s
         print("\t%s: %r" % (param_name, best_parameters[param_name]))
 
 
-def _get_pipeline_and_parameters(feat_select, clf, feat_select_object, clf_object, features, labels):
+def _get_pipeline_and_parameters(feat_select, clf, feat_select_object, clf_object, features, labels, num_features):
     if feat_select == 'pca' and clf == 'svm':
         mypipeline = Pipeline([('dim_reduct', feat_select_object), ('clf', clf_object)])
-        parameters = _get_parameters(feat_select='pca', clf='svm')
+        parameters = _get_parameters(feat_select='pca', clf='svm', n=num_features)
         best_parameters = _get_best_parameters(feat_select='pca', clf='svm')
         mypipeline_with_params = mypipeline.set_params(**best_parameters)
         mypipeline_with_params.fit(features, labels)
     if feat_select == 'k_best' and clf == 'svm':
         mypipeline = Pipeline([('feat_select', feat_select_object),('clf', clf_object)])
-        parameters = _get_parameters(feat_select='k_best', clf='svm')
+        parameters = _get_parameters(feat_select='k_best', clf='svm', n=num_features)
         best_parameters = _get_best_parameters(feat_select='k_best', clf='svm')
         mypipeline_with_params = mypipeline.set_params(**best_parameters)
         mypipeline_with_params.fit(features, labels)
     if feat_select == 'pca' and clf == 'ada_boost':
         mypipeline = Pipeline([('dim_reduct', feat_select_object), ('clf', clf_object)])
-        parameters = _get_parameters(feat_select='pca', clf='ada_boost')
+        parameters = _get_parameters(feat_select='pca', clf='ada_boost', n=num_features)
         best_parameters = _get_best_parameters(feat_select='pca', clf='ada_boost')
         mypipeline_with_params = mypipeline.set_params(**best_parameters)
         mypipeline_with_params.fit(features, labels)
     if feat_select == 'k_best' and clf == 'ada_boost':
         mypipeline = Pipeline([('feat_select', feat_select_object), ('clf', clf_object)])
-        parameters = _get_parameters(feat_select='k_best', clf='ada_boost')
+        parameters = _get_parameters(feat_select='k_best', clf='ada_boost', n=num_features)
         best_parameters = _get_best_parameters(feat_select='k_best', clf='ada_boost')
+        mypipeline_with_params = mypipeline.set_params(**best_parameters)
+        mypipeline_with_params.fit(features, labels)
+    if feat_select == 'pca' and clf == 'nb':
+        mypipeline = Pipeline([('dim_reduct', feat_select_object), ('clf', clf_object)])
+        parameters = _get_parameters(feat_select='pca', clf='nb', n=num_features)
+        best_parameters = _get_best_parameters(feat_select='pca', clf='nb')
         mypipeline_with_params = mypipeline.set_params(**best_parameters)
         mypipeline_with_params.fit(features, labels)
     return mypipeline, mypipeline_with_params, parameters, best_parameters
 
-def _test_pipeline(pipeline, params, feature_train, label_train, data_dict, features_list, folds):
+def _test_pipeline(pipeline, params, feature_train, label_train, data_dict, features_list, with_new_features, folds):
     """
     evaluates the classifier for all parameters using tester.py
     :param pipeline:
@@ -290,9 +301,11 @@ def _test_pipeline(pipeline, params, feature_train, label_train, data_dict, feat
     score_stats_list = []
     for value_set in params_values_product:
         kwargs = {name: value for name, value in zip(params_names, value_set)}
+        print('parameters: {0}'.format(kwargs))
         pipeline.set_params(**kwargs).fit(feature_train, label_train)
-        score_stats = test_classifier(pipeline, data_dict, features_list, folds)
-        score_stats_list.append(copy.deepcopy(score_stats))
+        score_stats = test_classifier(pipeline, data_dict, features_list, with_new_features, folds)
+        if score_stats:
+            score_stats_list.append(copy.deepcopy(score_stats))
         #print('score_stats_list: {0}'.format(score_stats_list))
     _find_best_params(score_stats_list)
 
@@ -326,5 +339,5 @@ def _find_best_params(score_stats_list):
             #print('all data for maximum {0}: {1}'.format(score, score_stats_list[index_max_score]))
             print('maximum {0}: {1:0.3f}'.format(score, max_score))
             print('clf for maximum {0}: {1}'.format(score, max_clf))
-        except TypeError as err:
+        except (TypeError, ValueError) as err:
             print(err)

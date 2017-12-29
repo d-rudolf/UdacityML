@@ -5,13 +5,16 @@
 Please use the Python 3.5 interpreter to run the code and load the pickle files.
 The code is not compatible with Python 2.7.
 Please follow the instructions in README.md for initial setup.
+Please also run my version of tester.py to test the classifier, which incorporates feature scaling.
+The original version of tester.py will fail in testing the classifier. 
+This is my third submission and I tried really hard to fulfill all the requirements. I hope I can pass the project now.
 
 #### 1. Goal of this project and how machine learning is useful in trying to accomplish it (data exploration, outlier investigation)
 
 The data for this project is partly from the public Enron email data set (https://www.cs.cmu.edu/~enron/) and partly 
 from financial data from findlaw.com (http://news.findlaw.com/hdocs/docs/enron/enron61702insiderpay.pdf). 
 The data can be roughly classified in three classes, which are income and stock data and email statistics. 
-There is also a feature shared receipt with poi, which does not fall into any of the three classes. 
+There is also a feature 'shared receipt with poi', which does not fall into any of the three classes. 
 The features are summarized in Tab. 1.  
 <table>  
     <tr>
@@ -46,187 +49,58 @@ The number of data points (persons) before formatting is 146 and after having re
 there are 136 persons left.
 The number of POI/non POI is 18/118.  
 If you define outliers as data points, which are several standard deviations away from the mean of a distribution, 
-I found three outliers:  'TOTAL', 'LAY KENNETH L', 'SKILLING JEFFREY K'. I tried to build a pipeline keeping 
-'LAY KENNETH L' and 'SKILLING JEFFREY K' in the dataset but it performs worse than without them.
-I can only fulfil the requirements recall and precision < 0.3 if I remove them.    
+I found three outliers:  'TOTAL', 'LAY KENNETH L', 'SKILLING JEFFREY K'. 
+According to the feedback from the previous review I removed only 'TOTAL' and kept 'LAY KENNETH L' and 'SKILLING JEFFREY K'
+in the data set.
 
 #### 2. Features (create new features, intelligently select features, properly scale features)
-First, I selected the financial features:
-<br> 
-['salary', 'bonus', 'deferral_payments', 'deferred_income', 'director_fees', 'expenses', 'loan_advances', 
-'long_term_incentive', 'total_payments']. In addition, I created two new features:
-<br> 
-'from_poi_to_this_person_ratio' ='from_poi_to_this_person'/'to_messages' and 
-'from_this_person_to_poi_ratio'='from_this_person_to_poi'/'from_messages', i.e. a ratio between  
-from_poi and to_poi and the total in and out emails. This reduces the number of features from four to two 
-and creates new reasonable features. 
-I tested my pipeline with and without the new features. 
-Here are the results without new features, i.e. with these features:
 
-['from_poi_to_this_person','to_messages','from_this_person_to_poi','from_messages','salary','bonus','deferral_payments','deferred_income','director_fees','expenses','loan_advances','long_term_incentive','total_payments'] 
-
-##### maximum precision: 0.650
-
-##### clf for maximum precision: 
-
-Pipeline(memory=None,
-     steps=[('dim_reduct', PCA(copy=True, iterated_power='auto', n_components=11, random_state=None,
-  svd_solver='auto', tol=0.0, whiten=False)), ('clf', SVC(C=20.0, cache_size=200, class_weight=None, coef0=0.0,
-  decision_function_shape='ovr', degree=3, gamma=1.0, kernel='rbf',
-  max_iter=-1, probability=False, random_state=None, shrinking=True,
-  tol=0.001, verbose=False))])
-  
-##### maximum recall: 0.454
-
-##### clf for maximum recall: 
-
-Pipeline(memory=None,
-     steps=[('dim_reduct', PCA(copy=True, iterated_power='auto', n_components=3, random_state=None,
-  svd_solver='auto', tol=0.0, whiten=False)), ('clf', SVC(C=80.0, cache_size=200, class_weight=None, coef0=0.0,
-  decision_function_shape='ovr', degree=3, gamma=0.5, kernel='rbf',
-  max_iter=-1, probability=False, random_state=None, shrinking=True,
-  tol=0.001, verbose=False))])
-
-##### maximum accuracy: 0.890
-
-##### clf for maximum accuracy: 
-
-Pipeline(memory=None,
-     steps=[('dim_reduct', PCA(copy=True, iterated_power='auto', n_components=11, random_state=None,
-  svd_solver='auto', tol=0.0, whiten=False)), ('clf', SVC(C=20.0, cache_size=200, class_weight=None, coef0=0.0,
-  decision_function_shape='ovr', degree=3, gamma=1.0, kernel='rbf',
-  max_iter=-1, probability=False, random_state=None, shrinking=True,
-  tol=0.001, verbose=False))])
-
-The results with new features, i.e. 
-
-['from_poi_to_this_person_ratio', 'from_this_person_to_poi_ratio', 'salary','bonus','deferral_payments','deferred_income','director_fees','expenses','loan_advances','long_term_incentive','total_payments'] 
-
-are the same. I get the same values for maximum recall, precision and accuracy for the same pipeline parameters.
-From that I conclude that my new features are as good as the given ones and keep using them. 
-Using these features I can achieve a precision and recall higher than 0.3 (Tab. 2).       
-I selected these features by testing a different subset of features with the tester.py, which creates a  
-StratifiedShuffleSplit cross validator and calculates the total accuracy, precision and recall.
-Initially, I also tried GridSearchCV to find the best model parameters, but it gave no agreement with the results 
-from tester.py when defining recall or precision as scores. Therefore, I wrote a function that iterates over the 
-parameters like n_components of PCA or C and gamma of SVM and selects the the parameters for the highest accuracy, 
-precision and recall.
-I manually tried a different subset of features and obtained these results.
-
-features: 
-
-['from_poi_to_this_person_ratio','from_this_person_to_poi_ratio','salary','bonus','deferral_payments','deferred_income','director_fees','expenses','loan_advances','long_term_incentive','total_payments','exercised_stock_options','restricted_stock','restricted_stock_deferred','total_stock_value']
-
-maximum precision: 0.448
-
-clf for maximum precision: 
-
-Pipeline(memory=None,
-     steps=[('dim_reduct', PCA(copy=True, iterated_power='auto', n_components=9, random_state=None,
-  svd_solver='auto', tol=0.0, whiten=False)), ('clf', SVC(C=80.0, cache_size=200, class_weight=None, coef0=0.0,
-  decision_function_shape='ovr', degree=3, gamma=0.5, kernel='rbf',
-  max_iter=-1, probability=False, random_state=None, shrinking=True,
-  tol=0.001, verbose=False))])
-
-maximum recall: 0.187
-
-clf for maximum recall: 
-
-Pipeline(memory=None,
-     steps=[('dim_reduct', PCA(copy=True, iterated_power='auto', n_components=7, random_state=None,
-  svd_solver='auto', tol=0.0, whiten=False)), ('clf', SVC(C=85.0, cache_size=200, class_weight=None, coef0=0.0,
-  decision_function_shape='ovr', degree=3, gamma=0.1, kernel='rbf',
-  max_iter=-1, probability=False, random_state=None, shrinking=True,
-  tol=0.001, verbose=False))])
-
-maximum accuracy: 0.886
-
-clf for maximum accuracy: 
-
-Pipeline(memory=None,
-     steps=[('dim_reduct', PCA(copy=True, iterated_power='auto', n_components=9, random_state=None,
-  svd_solver='auto', tol=0.0, whiten=False)), ('clf', SVC(C=80.0, cache_size=200, class_weight=None, coef0=0.0,
-  decision_function_shape='ovr', degree=3, gamma=0.5, kernel='rbf',
-  max_iter=-1, probability=False, random_state=None, shrinking=True,
-  tol=0.001, verbose=False))])
-
-features:
-
-['from_poi_to_this_person_ratio','from_this_person_to_poi_ratio','salary','bonus','deferral_payments','deferred_income','director_fees','expenses']
-
-maximum precision: 0.713
-
-clf for maximum precision: 
-
-Pipeline(memory=None,
-     steps=[('dim_reduct', PCA(copy=True, iterated_power='auto', n_components=7, random_state=None,
-  svd_solver='auto', tol=0.0, whiten=False)), ('clf', SVC(C=10.0, cache_size=200, class_weight=None, coef0=0.0,
-  decision_function_shape='ovr', degree=3, gamma=0.1, kernel='rbf',
-  max_iter=-1, probability=False, random_state=None, shrinking=True,
-  tol=0.001, verbose=False))])
-
-maximum recall: 
-
-0.461
-clf for maximum recall: 
-
-Pipeline(memory=None,
-     steps=[('dim_reduct', PCA(copy=True, iterated_power='auto', n_components=5, random_state=None,
-  svd_solver='auto', tol=0.0, whiten=False)), ('clf', SVC(C=75.0, cache_size=200, class_weight=None, coef0=0.0,
-  decision_function_shape='ovr', degree=3, gamma=1.0, kernel='rbf',
-  max_iter=-1, probability=False, random_state=None, shrinking=True,
-  tol=0.001, verbose=False))])
-
-maximum accuracy: 0.886
-
-clf for maximum accuracy: 
-
-Pipeline(memory=None,
-     steps=[('dim_reduct', PCA(copy=True, iterated_power='auto', n_components=5, random_state=None,
-  svd_solver='auto', tol=0.0, whiten=False)), ('clf', SVC(C=10.0, cache_size=200, class_weight=None, coef0=0.0,
-  decision_function_shape='ovr', degree=3, gamma=0.5, kernel='rbf',
-  max_iter=-1, probability=False, random_state=None, shrinking=True,
-  tol=0.001, verbose=False))])
-
-features:
-
-['from_poi_to_this_person_ratio', 'from_this_person_to_poi_ratio', 'from_messages', 'salary', 'bonus', 'deferral_payments']
-
-maximum precision: 0.395
-
-clf for maximum precision: 
-
-Pipeline(memory=None,
-     steps=[('dim_reduct', PCA(copy=True, iterated_power='auto', n_components=3, random_state=None,
-  svd_solver='auto', tol=0.0, whiten=False)), ('clf', SVC(C=10.0, cache_size=200, class_weight=None, coef0=0.0,
-  decision_function_shape='ovr', degree=3, gamma=1.0, kernel='rbf',
-  max_iter=-1, probability=False, random_state=None, shrinking=True,
-  tol=0.001, verbose=False))])
-
-maximum recall: 0.248
-
-clf for maximum recall: 
-
-Pipeline(memory=None,
-     steps=[('dim_reduct', PCA(copy=True, iterated_power='auto', n_components=3, random_state=None,
-  svd_solver='auto', tol=0.0, whiten=False)), ('clf', SVC(C=20.0, cache_size=200, class_weight=None, coef0=0.0,
-  decision_function_shape='ovr', degree=3, gamma=0.5, kernel='rbf',
-  max_iter=-1, probability=False, random_state=None, shrinking=True,
-  tol=0.001, verbose=False))])
-
-maximum accuracy: 0.852
-
-clf for maximum accuracy:
-
-Pipeline(memory=None,
-     steps=[('dim_reduct', PCA(copy=True, iterated_power='auto', n_components=3, random_state=None,
-  svd_solver='auto', tol=0.0, whiten=False)), ('clf', SVC(C=10.0, cache_size=200, class_weight=None, coef0=0.0,
-  decision_function_shape='ovr', degree=3, gamma=1.0, kernel='rbf',
-  max_iter=-1, probability=False, random_state=None, shrinking=True,
-  tol=0.001, verbose=False))])
-
+My procedure to select the best features was as follows. First, I ordered all features by their SelectKBest score (ANOVA F-value):
+[('exercised_stock_options', 34.73257743), ('total_stock_value', 33.31087215), ('restricted_stock', 15.21368276), ('salary', 10.22957239), ('bonus', 10.09863783), ('total_payments', 8.82481433), ('loan_advances', 8.17870326), ('long_term_incentive', 7.54929549), ('other', 4.85790445), ('expenses', 3.34279872), ('from_this_person_to_poi', 2.16001363), ('shared_receipt_with_poi', 1.38336448), ('director_fees', 1.37250905), ('deferred_income', 1.19555209), ('deferral_payments', 0.8831138), ('from_poi_to_this_person', 0.75033658), ('to_messages', 0.57357048), ('restricted_stock_deferred', 0.07779663), ('from_messages', 0.05916248)]
+Then, I selected the first, the first and the second, the first, the second and the third etc. features and performed a 
+parameter scan with my own function _test_pipeline from helper.py. The function iterates over the parameters like n_components of PCA or C and gamma of SVM and selects the parameters for 
+the highest accuracy, precision and recall. 
+I did not use GridSearchCV because it did not worked for 
+me defining precision and recall as scoring. A log file from the parameter scan is attached (parameter_scan_pca_svm.log).   
 The best result I obtained for these features:
-['from_poi_to_this_person_ratio','from_this_person_to_poi_ratio','salary','bonus','deferral_payments','deferred_income','director_fees','expenses']
+['exercised_stock_options', 'total_stock_value', 'restricted_stock', 'salary', 'bonus']
+Their SelectKBest scores are [ 21.43451501  20.77586138   7.61960042  14.86411702  17.59161819].
+The best result is 
+
+precision: 0.507 +/- 0.032
+
+recall: 0.478 +/- 0.072
+
+accuracy: 0.849 +/- 0.012
+
+clf: Pipeline(memory=None,
+     steps=[('dim_reduct', PCA(copy=True, iterated_power='auto', n_components=4, random_state=None,
+  svd_solver='auto', tol=0.0, whiten=False)), ('clf', SVC(C=100000.0, cache_size=200, class_weight=None, coef0=0.0,
+  decision_function_shape='ovr', degree=3, gamma=0.01, kernel='rbf',
+  max_iter=-1, probability=False, random_state=None, shrinking=True,
+  tol=0.001, verbose=False))])
+	Accuracy: 0.85455	Precision: 0.52500	Recall: 0.42000 	F1: 0.46667	F2: 0.43750
+	Total predictions:  330	True positives:   21	False positives:   19	False negatives:   29	True negatives:  261
+
+I also created a new feature multiplying 'exercised_stock_options' with 'total_stock_value', i.e. my feature list is
+['exercised_stock_options' x 'total_stock_value', 'total_stock_value', 'restricted_stock', 'salary', 'bonus'] with
+[ 21.49624452  20.77586138   7.61960042  14.86411702  17.59161819] as their corresponding SelectKBest scores.
+My new feature has almost the same score as 'exercised_stock_options'. However, the classification result is worse than before:
+
+recall: 0.328 +/- 0.054
+
+accuracy: 0.822 +/- 0.022
+
+precision: 0.399 +/- 0.070
+
+clf: Pipeline(memory=None,
+     steps=[('dim_reduct', PCA(copy=True, iterated_power='auto', n_components=4, random_state=None,
+  svd_solver='auto', tol=0.0, whiten=False)), ('clf', SVC(C=100000.0, cache_size=200, class_weight=None, coef0=0.0,
+  decision_function_shape='ovr', degree=3, gamma=0.01, kernel='rbf',
+  max_iter=-1, probability=False, random_state=None, shrinking=True,
+  tol=0.001, verbose=False))])
+	Accuracy: 0.83636	Precision: 0.44737	Recall: 0.34000 	F1: 0.38636	F2: 0.35714
+	Total predictions:  330	True positives:   17	False positives:   21	False negatives:   33	True negatives:  259
 
 At this point, I also have to make a criticism that originally, in tester.py, precision, recall 
 and accuracy are calculated as some kind of global values for all folds of StratifiedShuffleSplit. I think, a better 
@@ -248,63 +122,46 @@ standardized data set.
         <td> recall </td> 
     </tr>
     <tr>
-        <td> 'from_poi_to_this_person_ratio', 'from_this_person_to_poi_ratio',
-             'salary', 'bonus', 'deferral_payments', 'deferred_income', 'director_fees', 'expenses'</td> 
-        <td>  </td>  
+        <td> ['exercised_stock_options', 'total_stock_value', 'restricted_stock', 'salary', 'bonus']</td> 
+        <td> [ 21.43451501  20.77586138   7.61960042  14.86411702  17.59161819] </td>  
         <td> Pipeline(memory=None,
-     steps=[('dim_reduct', PCA(copy=True, iterated_power='auto', n_components=5, random_state=None,
-  svd_solver='auto', tol=0.0, whiten=False)), ('clf', SVC(C=75.0, cache_size=200, class_weight=None, coef0=0.0,
-  decision_function_shape='ovr', degree=3, gamma=1.0, kernel='rbf',
+     steps=[('dim_reduct', PCA(copy=True, iterated_power='auto', n_components=4, random_state=None,
+  svd_solver='auto', tol=0.0, whiten=False)), ('clf', SVC(C=100000.0, cache_size=200, class_weight=None, coef0=0.0,
+  decision_function_shape='ovr', degree=3, gamma=0.01, kernel='rbf',
   max_iter=-1, probability=False, random_state=None, shrinking=True,
   tol=0.001, verbose=False))])
          </td> 
-        <td> 0.869 +/- 0.011</td> 
-        <td> 0.461 +/- 0.040 </td> 
-        <td> 0.461 +/- 0.124 </td> 
+        <td> 0.849 +/- 0.012</td> 
+        <td>  0.507 +/- 0.032 </td> 
+        <td> 0.478 +/- 0.072 </td> 
      <tr>
      <tr>
         <td>  </td> 
         <td>  </td>  
         <td>  Pipeline(memory=None,
-     steps=[('dim_reduct', PCA(copy=True, iterated_power='auto', n_components=7, random_state=None,
+     steps=[('dim_reduct', PCA(copy=True, iterated_power='auto', n_components=3, random_state=None,
   svd_solver='auto', tol=0.0, whiten=False)), ('clf', AdaBoostClassifier(algorithm='SAMME.R', base_estimator=None,
-          learning_rate=1.0, n_estimators=100, random_state=None))])       </td> 
-        <td> 0.890 +/- 0.009 </td> 
-        <td> 0.570 +/- 0.052 </td> 
-        <td> 0.395 +/- 0.042 </td> 
+          learning_rate=1.0, n_estimators=100, random_state=None))])
+</td> 
+        <td> 0.796 +/- 0.058 </td> 
+        <td> 0.352 +/- 0.098 </td> 
+        <td> 0.317 +/- 0.054 </td> 
      <tr>
      <tr>
         <td>  </td> 
-        <td>[  0.19415698   6.11394231   6.42033595   2.73336044   0.7804664
-            15.80286711   1.37297104   4.1088099 ] 
-        </td>  
+        <td>  </td>  
         <td>  Pipeline(memory=None,
-     steps=[('feat_select', SelectKBest(k=6, score_func=<function f_classif at 0x7f6206477ae8>)), ('clf', SVC(C=75.0, cache_size=200, class_weight=None, coef0=0.0,
-  decision_function_shape='ovr', degree=3, gamma=0.5, kernel='rbf',
-  max_iter=-1, probability=False, random_state=None, shrinking=True,
-  tol=0.001, verbose=False))])  
+     steps=[('dim_reduct', PCA(copy=True, iterated_power='auto', n_components=4, random_state=None,
+  svd_solver='auto', tol=0.0, whiten=False)), ('clf', GaussianNB(priors=None))])  
         </td> 
-        <td> 0.850 +/- 0.016 </td> 
-        <td> 0.369 +/- 0.043 </td> 
-        <td> 0.312 +/- 0.075</td> 
-     <tr>
-     <tr>
-        <td>  </td> 
-        <td> [  0.19415698   6.11394231   6.42033595   2.73336044   0.7804664
-         15.80286711   1.37297104   4.1088099 ]
-        </td>  
-        <td> Pipeline(memory=None,
-     steps=[('feat_select', SelectKBest(k=7, score_func=<function f_classif at 0x7f03045b2ae8>)), ('clf', AdaBoostClassifier(algorithm='SAMME.R', base_estimator=None,
-          learning_rate=1.5, n_estimators=500, random_state=None))])
-        </td> 
-        <td> 0.828 +/- 0.010 </td> 
-        <td> 0.307 +/- 0.038 </td> 
-        <td> 0.338 +/- 0.061 </td> 
+        <td> 0.859 +/- 0.017 </td> 
+        <td> 0.569 +/- 0.110 </td> 
+        <td> 0.311 +/- 0.048</td> 
      <tr>
 </table>
 Tab. 2
 <br>
-I tried KBest and PCA for feature selection and dimensionality reduction and SVM and AdaBoost for classification.
+I tried PCA for dimensionality reduction and SVM, AdaBoost and GaussianNB for classification.
 The results are summarized in Tab. 2, where you can see the features, the feature weights, my best pipeline with all 
 the parameters and the obtained scores (accuracy, precision and recall). My best result was with PCA and SVM 
 (row 1 in Tab. 2). The difficult part was to get both recall and precision above the threshold of 0.3.
@@ -335,9 +192,10 @@ recall = number of true positives/(number of false negatives + number of true po
 My results for both are presented in Tab. 2. 
 For my data set, a precision of 0.349 means e.g. that there are 15 true positives and 28 false positives. 
 A recall of 0.375 means that there are 15 true positives and 25 false negatives.
-If a person is a POI, a classifier with a high precision will most likely correctly classify him/her as a POI.     
-If a person is not a POI, a classifier with a high recall will most likely correctly classify him/her as a non-POI.     
- 
+If a person is a non-POI, a classifier with a high precision will most likely correctly classify him/her as a non-POI 
+(number of false positives is low). It will also be successful in identifying POIs. 
+If a person is a POI, a classifier with a high recall will most likely correctly 
+classify him/her as a POI (number of false negatives is low).
 
 #### 7. References
 - documentation of scikit-learn (http://scikit-learn.org/stable/) 
