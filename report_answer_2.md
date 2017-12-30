@@ -12,7 +12,7 @@ poi_id.py can be run to export the dataset, list of features and algorithm, so t
 
 I was able to run `poi_id.py` with python 3.5 as you have suggested.
 
-### Understanding the Dataset and Question
+****### Understanding the Dataset and Question
 
 Student response addresses the most important characteristics of the dataset and uses these characteristics to inform their analysis. Important characteristics include:
 

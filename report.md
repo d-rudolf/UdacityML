@@ -5,9 +5,18 @@
 Please use the Python 3.5 interpreter to run the code and load the pickle files.
 The code is not compatible with Python 2.7.
 Please follow the instructions in README.md for initial setup.
-Please also run my version of tester.py to test the classifier, which incorporates feature scaling.
-The original version of tester.py will fail in testing the classifier. 
-This is my third submission and I tried really hard to fulfill all the requirements. I hope I can pass the project now.
+The project report is in the file report.md.  
+You can test my project using the original file tester.py but you have to make it compatible with Python 3.5.
+Initially, it is not compatible with Python 3.5. Also, since I did feature scaling with preprocessing.scale(features) 
+you also have to include this line of code into the original tester.py
+```
+features = preprocessing.scale(features)
+
+```
+Otherwise the features will be not scaled and my classifier will not work (makes sense, right?).  
+Alternatively, you can also run my version of tester.py to test the classifier, which incorporates feature scaling.
+Checking the code you will see what I did.
+This is my fourth submission and I tried really hard to fulfill all the requirements. I hope I can pass the project now.
 
 #### 1. Goal of this project and how machine learning is useful in trying to accomplish it (data exploration, outlier investigation)
 
